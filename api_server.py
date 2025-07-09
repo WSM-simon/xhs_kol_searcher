@@ -94,12 +94,6 @@ async def searchItem(item: str, count: int = 20):
     crawler = XiaoHongShuCrawler()
     await crawler.start()
 
-    # if result.returncode != 0:
-    #     raise HTTPException(
-    #         status_code=500,
-    #         detail=f"Crawler exited with code {result.returncode}: {result.stderr}",
-    #     )
-    
     dataPath = _get_store_path("search", "contents")
 
     try:
@@ -109,7 +103,37 @@ async def searchItem(item: str, count: int = 20):
 
     return data
 
+@app.post("/searchUser")
+async def searchItem(userIdList: list[str]): 
+# async def searchUser():
+    """Trigger the crawler and return its JSON output.
 
+    Query params
+    ----------
+    - **userId**: xhs user id
+    """
+
+    config.XHS_CREATOR_ID_LIST = ["5a372d7f4eacab1df9228ec0"]
+    config.ENABLE_CDP_MODE = True
+    config.LOGIN_TYPE = "qrcode"
+    config.ENABLE_GET_COMMENTS = False
+    config.ENABLE_GET_SUB_COMMENTS = False
+    config.SAVE_DATA_OPTION = 'json'
+    config.CRAWLER_TYPE = (
+        "creator"
+        )
+
+    crawler = XiaoHongShuCrawler()
+    await crawler.start()
+    # await crawler.get_only_creators()
+    dataPath = _get_store_path("creator", "creator")
+
+    try:
+        data = json.loads(dataPath.read_text(encoding='utf-8'))
+    except json.JSONDecodeError as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Failed to parse JSON: {exc}") from exc
+
+    return data
 
         
 if __name__ == "__main__":
